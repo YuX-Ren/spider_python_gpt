@@ -1,7 +1,7 @@
 import sys
 import requests
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit, QPushButton, QLabel, QFrame
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit, QPushButton, QLabel, QFrame, QDialog, QFormLayout
 from PyQt5.QtGui import QFont, QPalette, QColor
 import json
 import os
@@ -88,10 +88,54 @@ class ChatWindow(QWidget):
         else:
             return "Sorry, something went wrong with the API request."
 
+
+# Add a LoginWindow class
+class LoginWindow(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle("API Key Login")
+
+        layout = QFormLayout()
+
+        self.api_key_input = QLineEdit()
+        layout.addRow("API Key:", self.api_key_input)
+
+        login_button = QPushButton("Login")
+        login_button.clicked.connect(self.check_api_key)
+        layout.addRow(login_button)
+
+        self.setLayout(layout)
+
+    def check_api_key(self):
+        api_key = self.api_key_input.text()
+        if self.verify_api_key(api_key):
+            self.accept()
+        else:
+            self.api_key_input.clear()
+            self.api_key_input.setPlaceholderText("Invalid API key, please try again")
+
+    def verify_api_key(self, api_key):
+        # Replace this function with a request to your API that checks the validity of the provided API key
+        test_api_url = "https://your-api-url.com/verify"
+        headers = {"Authorization": f"Bearer {api_key}"}
+        response = requests.get(test_api_url, headers=headers)
+
+        return response.status_code == 200
+
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    apikey = " "
-    chat_window = ChatWindow(apikey)
-    chat_window.show()
+    login_window = LoginWindow()
 
+    if login_window.exec_() == QDialog.Accepted:
+        # If the login is successful, show the chat window
+        api_key = login_window.api_key_input.text()
+        chat_window = ChatWindow(api_key)
+        chat_window.show()
+        sys.exit(app.exec_())
     sys.exit(app.exec_())
