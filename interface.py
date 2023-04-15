@@ -39,7 +39,7 @@ class ChatWindow(QWidget):
         self.conversation_area.setReadOnly(True)
         layout.addWidget(self.conversation_area)
 
-        # Add input and send button container
+        # Add input container
         input_container = QHBoxLayout()
 
         # Add input field
@@ -48,14 +48,32 @@ class ChatWindow(QWidget):
         self.input_line.setFixedHeight(40)
         input_container.addWidget(self.input_line)
 
-        # Add send button
-        send_button = QPushButton('Send')
-        send_button.setFixedHeight(40)
-        send_button.clicked.connect(self.send_message)
-        input_container.addWidget(send_button)
-
         # Add input container to the main layout
         layout.addLayout(input_container)
+
+        # Add buttons
+        buttons = QHBoxLayout()
+        
+        # Add send button
+        send_button = QPushButton('chat')
+        send_button.setFixedHeight(40)
+        send_button.clicked.connect(self.send_message)
+        buttons.addWidget(send_button)
+
+        # Add search_wiki button
+        send_button = QPushButton('search_wiki')
+        send_button.setFixedHeight(40)
+        send_button.clicked.connect(self.search_wikipedia)
+        buttons.addWidget(send_button)
+
+        # Add image button
+        send_button = QPushButton('image_generation')
+        send_button.setFixedHeight(40)
+        send_button.clicked.connect(self.get_image_from_api)
+        buttons.addWidget(send_button)
+
+        # Add buttons to the main layout
+        layout.addLayout(buttons)
 
         # Add horizontal line separator
         hline = QFrame()
@@ -87,7 +105,12 @@ class ChatWindow(QWidget):
             return Hjson["choices"][0]["message"]["content"]
         else:
             return "Sorry, something went wrong with the API request."
+    
+    def search_wikipedia(self):
+        pass
 
+    def get_image_from_api(self):
+        pass
 
 # Add a LoginWindow class
 class LoginWindow(QDialog):
