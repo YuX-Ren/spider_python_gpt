@@ -1,8 +1,10 @@
 import sys
 import requests
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit, QPushButton, QLabel, QFrame, QDialog, QFormLayout
+from PyQt5.QtCore import Qt,QUrl
+from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit, QPushButton, QLabel, QFrame,
+                             QDialog, QFormLayout, QListWidget, QListWidgetItem)
 from PyQt5.QtGui import QFont, QPalette, QColor
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 import json
 import os
 os.environ['ALL_PROXY']='http://127.0.0.1:7890'
@@ -99,7 +101,6 @@ class ChatWindow(QWidget):
         "messages": [{"role": "user", "content": message}]
         }
         response = requests.post(api_url, json=payload,headers=headers)
-        print(response.text)
         Hjson = json.loads(response.text)
         if response.status_code == 200:
             return Hjson["choices"][0]["message"]["content"]
@@ -107,7 +108,69 @@ class ChatWindow(QWidget):
             return "Sorry, something went wrong with the API request."
     
     def search_wikipedia(self):
-        pass
+        user_message = self.input_line.text()
+        api_url = "https://en.wikipedia.org/w/api.php"
+        params = {
+            "action": "query",
+            "format": "json",
+            "list": "search",
+            "utf8": 1,
+            "formatversion": 2,
+            "srsearch": user_message,
+            "srlimit": 10,
+            "srprop": "snippet"
+        }
+        response = requests.get(api_url, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+            search_results = data["query"]["search"]
+            selected_page = self.show_search_results(search_results)
+            if selected_page:
+                self.show_wikipedia_page(selected_page)
+        else:
+            self.conversation_area.append("Bot: Sorry, I couldn't find any results.")
+        self.input_line.clear()
+
+    def show_search_results(self, search_results):
+        result_dialog = QDialog(self)
+        result_dialog.setWindowTitle("Search Results")
+
+        layout = QVBoxLayout()
+
+        result_list = QListWidget()
+        for item in search_results:
+            result_item = QListWidgetItem(item["title"])
+            result_item.setData(Qt.UserRole, item["pageid"])
+            result_list.addItem(result_item)
+        layout.addWidget(result_list)
+
+        select_button = QPushButton("Select")
+        select_button.clicked.connect(result_dialog.accept)
+        layout.addWidget(select_button)
+        result_dialog.setLayout(layout)
+        if result_dialog.exec_() == QDialog.Accepted:
+            selected_item = result_list.currentItem()
+        if selected_item:
+            pageid = selected_item.data(Qt.UserRole)
+            title = selected_item.text()
+            return {"pageid": pageid, "title": title}
+        return None
+
+    def show_wikipedia_page(self, selected_page):
+        page_dialog = QDialog(self)
+        page_dialog.setWindowTitle(selected_page["title"])
+
+        layout = QVBoxLayout()
+
+        web_view = QWebEngineView()
+        url = f"https://en.wikipedia.org/?curid={selected_page['pageid']}"
+        web_view.load(QUrl(url))
+        layout.addWidget(web_view)
+
+        page_dialog.setLayout(layout)
+        page_dialog.setFixedSize(800, 600)
+        page_dialog.exec_()
 
     def get_image_from_api(self):
         pass
@@ -143,7 +206,7 @@ class LoginWindow(QDialog):
 
     def verify_api_key(self, api_key):
         # Replace this function with a request to your API that checks the validity of the provided API key
-        test_api_url = "https://your-api-url.com/verify"
+        test_api_url = "https://api.openai.com/v1/models"
         headers = {"Authorization": f"Bearer {api_key}"}
         response = requests.get(test_api_url, headers=headers)
 
