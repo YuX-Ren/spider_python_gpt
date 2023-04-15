@@ -3,7 +3,7 @@ import requests
 from PyQt5.QtCore import Qt,QUrl
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit, QPushButton, QLabel, QFrame,
                              QDialog, QFormLayout, QListWidget, QListWidgetItem)
-from PyQt5.QtGui import QFont, QPalette, QColor
+from PyQt5.QtGui import QFont, QPalette, QColor, QImage, QPixmap
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 import json
 import os
@@ -173,7 +173,41 @@ class ChatWindow(QWidget):
         page_dialog.exec_()
 
     def get_image_from_api(self):
-        pass
+        user_message = self.input_line.text()
+        url = "https://api.openai.com/v1/images/generations"
+        headers = {"Authorization": f"Bearer {self.apikey}","Content-Type": "application/json"}
+        json ={
+            "prompt": user_message,
+            "n": 1,
+            "size": "256x256"
+        }
+        response = requests.post(url, headers=headers,json=json)
+        if response.status_code == 200:
+            image_url=response.json()["data"][0]
+            if image_url:
+                    self.show_image(image_url["url"])
+        else:
+            self.conversation_area.append("Bot: Sorry, I couldn't find any image.")
+        self.input_line.clear()
+
+    def show_image(self, image_url):
+        image_dialog = QDialog(self)
+        image_dialog.setWindowTitle("Generated Image")
+
+        layout = QVBoxLayout()
+
+        image_label = QLabel()
+        image_data = requests.get(image_url).content
+        image = QImage()
+        image.loadFromData(image_data)
+        pixmap = QPixmap(image)
+        image_label.setPixmap(pixmap.scaled(640, 480, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+        layout.addWidget(image_label)
+
+        image_dialog.setLayout(layout)
+        image_dialog.setFixedSize(640, 480)
+        image_dialog.exec_()
 
 # Add a LoginWindow class
 class LoginWindow(QDialog):
