@@ -1,7 +1,7 @@
 import sys
 import requests
 from PyQt5.QtCore import Qt,QUrl
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit, QPushButton, QLabel, QFrame,
+from PyQt5.QtWidgets import ( QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit, QPushButton, QLabel, QFrame,
                              QDialog, QFormLayout, QListWidget, QListWidgetItem)
 from PyQt5.QtGui import QFont, QPalette, QColor, QImage, QPixmap
 from PyQt5.QtWebEngineWidgets import QWebEngineView
@@ -14,6 +14,7 @@ class ChatWindow(QWidget):
 
         self.init_ui()
         self.apikey = apikey
+        self.messages = []
 
     def init_ui(self):
         self.setWindowTitle('Chat Interface')
@@ -89,16 +90,19 @@ class ChatWindow(QWidget):
         user_message = self.input_line.text()
         if user_message:
             self.conversation_area.append(f"You: {user_message}")
-            response = self.get_api_response(user_message)
+            self.messages.append({"role": "user", "content": user_message})
+            response = self.get_api_response(self.messages)
+            self.messages.append({"role": "assistant", "content": response})
+            self.messages=self.messages[-6:]
             self.conversation_area.append(f"Bot: {response}")
             self.input_line.clear()
 
-    def get_api_response(self, message):
+    def get_api_response(self, messages):
         api_url = "https://api.openai.com/v1/chat/completions"
         headers = {"Authorization": f"Bearer {self.apikey}","Content-Type": "application/json"}
         payload = {
         "model": "gpt-3.5-turbo",
-        "messages": [{"role": "user", "content": message}]
+        "messages": messages
         }
         response = requests.post(api_url, json=payload,headers=headers)
         Hjson = json.loads(response.text)
@@ -246,16 +250,3 @@ class LoginWindow(QDialog):
 
         return response.status_code == 200
 
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    login_window = LoginWindow()
-
-    if login_window.exec_() == QDialog.Accepted:
-        # If the login is successful, show the chat window
-        api_key = login_window.api_key_input.text()
-        chat_window = ChatWindow(api_key)
-        chat_window.show()
-        sys.exit(app.exec_())
-    sys.exit(app.exec_())
