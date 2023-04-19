@@ -12,4 +12,4 @@ if __name__ == '__main__':
         chat_window = ChatWindow(api_key)
         chat_window.show()
         sys.exit(app.exec_())
-    sys.exit(app.exec_())
+    sys.exit()
