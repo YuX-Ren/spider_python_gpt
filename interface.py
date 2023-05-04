@@ -75,6 +75,12 @@ class ChatWindow(QWidget):
         send_button.clicked.connect(self.get_image_from_api)
         buttons.addWidget(send_button)
 
+        # Add summarize button
+        send_button = QPushButton('summarize')
+        send_button.setFixedHeight(40)
+        send_button.clicked.connect(self.summarize_text)
+        buttons.addWidget(send_button)
+
         # Add buttons to the main layout
         layout.addLayout(buttons)
 
@@ -132,6 +138,13 @@ class ChatWindow(QWidget):
             selected_page = self.show_search_results(search_results)
             if selected_page:
                 self.show_wikipedia_page(selected_page)
+                page_content = self.get_wikipedia_page_content(selected_page["pageid"])
+                print(page_content)
+                if page_content:
+                    self.summarize_text(page_content)
+                    # self.conversation_area.append(f"Bot: Here is a summary of '{selected_page['title']}' on Wikipedia: {summary}")
+                else:
+                    self.conversation_area.append("Bot...: Sorry, I couldn't find any content for that page.")
         else:
             self.conversation_area.append("Bot: Sorry, I couldn't find any results.")
         self.input_line.clear()
@@ -213,6 +226,45 @@ class ChatWindow(QWidget):
         image_dialog.setFixedSize(640, 480)
         image_dialog.exec_()
 
+    def get_wikipedia_page_content(self, pageid):
+        api_url = "https://en.wikipedia.org/w/api.php"
+        params = {
+            "action": "query",
+            "format": "json",
+            "prop": "extracts",
+            "pageids": pageid,
+            "explaintext": 1,
+            "exsectionformat": "wiki",
+            "utf8": 1,
+            "formatversion": 2
+        }
+        response = requests.get(api_url, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+            if "extract" in data["query"]["pages"][0]:
+                return data["query"]["pages"][0]["extract"]
+        return None
+
+    def summarize_text(self, text='\n'):
+        if(text == '\n'):
+            text = self.input_line.text()
+        api_url = "https://api.openai.com/v1/chat/completions"
+        headers = {"Authorization": f"Bearer {self.apikey}","Content-Type": "application/json"}
+        payload = {
+        "model": "gpt-3.5-turbo",
+        "messages": [{"role": "user", "content": f"Please summarize the following text:\n{text[0:4000]}"}]
+        }
+        response = requests.post(api_url, json=payload, headers=headers)
+        print(response.status_code)
+        print(response.text)
+        if response.status_code == 200:
+            summary = response.json()["choices"][0]["message"]["content"]
+            self.conversation_area.append(f"Bot: Here is a summary of the article - {summary}")
+        else:
+            self.conversation_area.append("Bot: Sorry, I couldn't summarize the article.")
+
+        self.input_line.clear()
 # Add a LoginWindow class
 class LoginWindow(QDialog):
     def __init__(self, parent=None):
