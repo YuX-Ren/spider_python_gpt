@@ -14,6 +14,8 @@ class ChatWindow(QWidget):
 
         self.init_ui()
         self.apikey = apikey
+        self.turn = 6
+        # you can modify the turn to your own bot
         self.messages = []
 
     def init_ui(self):
@@ -99,7 +101,7 @@ class ChatWindow(QWidget):
             self.messages.append({"role": "user", "content": user_message})
             response = self.get_api_response(self.messages)
             self.messages.append({"role": "assistant", "content": response})
-            self.messages=self.messages[-6:]
+            self.messages=self.messages[-self.turn:]
             self.conversation_area.append(f"Bot: {response}")
             self.input_line.clear()
 
@@ -139,10 +141,8 @@ class ChatWindow(QWidget):
             if selected_page:
                 self.show_wikipedia_page(selected_page)
                 page_content = self.get_wikipedia_page_content(selected_page["pageid"])
-                print(page_content)
                 if page_content:
                     self.summarize_text(page_content)
-                    # self.conversation_area.append(f"Bot: Here is a summary of '{selected_page['title']}' on Wikipedia: {summary}")
                 else:
                     self.conversation_area.append("Bot...: Sorry, I couldn't find any content for that page.")
         else:
@@ -256,10 +256,13 @@ class ChatWindow(QWidget):
         "messages": [{"role": "user", "content": f"Please summarize the following text:\n{text[0:4000]}"}]
         }
         response = requests.post(api_url, json=payload, headers=headers)
-        print(response.status_code)
-        print(response.text)
         if response.status_code == 200:
             summary = response.json()["choices"][0]["message"]["content"]
+            #add the summary to the conversation area & messages
+            self.conversation_area.append(f"You: Please summarize the following text")
+            self.messages.append({"role": "user", "content": "Please summarize the following text"})
+            self.messages.append({"role": "assistant", "content": summary})
+            self.messages=self.messages[-self.turn:]
             self.conversation_area.append(f"Bot: Here is a summary of the article - {summary}")
         else:
             self.conversation_area.append("Bot: Sorry, I couldn't summarize the article.")
@@ -295,7 +298,6 @@ class LoginWindow(QDialog):
             self.api_key_input.setPlaceholderText("Invalid API key, please try again")
 
     def verify_api_key(self, api_key):
-        # Replace this function with a request to your API that checks the validity of the provided API key
         test_api_url = "https://api.openai.com/v1/models"
         headers = {"Authorization": f"Bearer {api_key}"}
         response = requests.get(test_api_url, headers=headers)

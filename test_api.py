@@ -2,18 +2,18 @@ import requests
 import os
 os.environ['ALL_PROXY']='http://127.0.0.1:7890'
 # url = "https://api.openai.com/v1/chat/completions"
-your_apikey = " "
+your_apikey = ""
 # headers = {"Authorization": your_apikey,"Content-Type": "application/json"}
 # json ={
 #     "model": "gpt-3.5-turbo",
 #     "messages": [{"role": "user", "content": "Hello!"}]
 #   }
-text="Since diffusion models (DM) and the more recent Poisson flow generative models (PFGM) are inspired by physical processes, it is reasonable to ask: Can physical processes offer additional new generative models? We show that the answer is yes. We introduce a general family, Generative Models from Physical Processes (GenPhys), where we translate partial differential equations (PDEs) describing physical processes to generative models. We show that generative models can be constructed from s-generative PDEs (s for smooth). GenPhys subsume the two existing generative models (DM and PFGM) and even give rise to new families of generative models, e.g., \"Yukawa Generative Models\" inspired from weak interactions. On the other hand, some physical processes by default do not belong to the GenPhys family, e.g., the wave equation and the Schrödinger equation, but could be made into the GenPhys family with some modifications. Our goal with GenPhys is to explore and expand the design space of generative models. "
+text="Hi"
 api_url = "https://api.openai.com/v1/chat/completions"
 headers = {"Authorization": f"Bearer {your_apikey}","Content-Type": "application/json"}
 payload = {
 "model": "gpt-3.5-turbo",
-"messages": [{"role": "user", "content": f"Please summarize the following text:\n{text}"}]
+"messages": [{"role": "user", "content": text}]
 }
 response = requests.post(api_url, json=payload,headers=headers)
 

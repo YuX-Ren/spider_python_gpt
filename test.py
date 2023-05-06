@@ -16,18 +16,17 @@ os.environ['ALL_PROXY']='http://127.0.0.1:7890'
 # Python 3
 # Choose your language, and search for articles.
 
-language_code = 'en'
-search_query = 'solar system'
-number_of_results = 1
-headers = {
-  # 'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-  'User-Agent': 'YOUR_APP_NAME (YOUR_EMAIL_OR_CONTACT_PAGE)'
+user_message = "wiki"
+api_url = "https://en.wikipedia.org/w/api.php"
+params = {
+    "action": "query",
+    "format": "json",
+    "list": "search",
+    "utf8": 1,
+    "formatversion": 2,
+    "srsearch": user_message,
+    "srlimit": 10,
+    "srprop": "snippet"
 }
-
-base_url = 'https://api.wikimedia.org/core/v1/wikipedia/'
-endpoint = '/search/page'
-url = base_url + language_code + endpoint
-parameters = {'q': search_query, 'limit': number_of_results}
-response = requests.get(url, headers=headers, params=parameters)
-Json = json.loads(response.content)
-print(Json)
+response = requests.get(api_url, params=params)
+print(response.text)
