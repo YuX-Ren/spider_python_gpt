@@ -246,8 +246,8 @@ class ChatWindow(QWidget):
                 return data["query"]["pages"][0]["extract"]
         return None
 
-    def summarize_text(self, text='\n'):
-        if(text == '\n'):
+    def summarize_text(self, text):
+        if(text == False):
             text = self.input_line.text()
         api_url = "https://api.openai.com/v1/chat/completions"
         headers = {"Authorization": f"Bearer {self.apikey}","Content-Type": "application/json"}
